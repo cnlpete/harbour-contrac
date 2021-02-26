@@ -404,5 +404,9 @@
         <source>Consult your health service for appropriate action</source>
         <translation type="unfinished"></translation>
     </message>
+    <message id="contrac-main_la_status-unknown">
+        <source>Unknown</source>
+        <translation type="unfinished">Unbekannt</translation>
+    </message>
 </context>
 </TS>
