@@ -90,14 +90,16 @@ QList<ContactMatch> DayStorage::findDtkMatches(QList<DiagnosisKey> const &dtks)
     QList<ContactMatch> probables;
 
     findProbables(dtks, probables);
-    qDebug() << "Probables size: " << probables.size();
+    if (probables.size() > 0)
+        qDebug() << "Probables size: " << probables.size();
 
     // There's no point opening the captures file unless there are some probables to check
     if (!probables.isEmpty()) {
         // Now go through in detail and filter out any errors
         // Adding in rssi values as we go
         findActuals(probables, actuals);
-        qDebug() << "Actuals size: " << probables.size();
+        if (actuals.size() > 0)
+            qDebug() << "Actuals size: " << actuals.size() << ", from " << probables.size() << " Probables";
     }
 
     return actuals;

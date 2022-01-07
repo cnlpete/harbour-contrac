@@ -1,6 +1,7 @@
 #include <QDebug>
 #include <math.h>
 #include <QMutexLocker>
+#include <QElapsedTimer>
 
 #include "exposurenotification_p.h"
 #include "contrac.pb.h"
@@ -226,6 +227,8 @@ void ProvideDiagnosticKeys::run()
     QList<DiagnosisKey> diagnosisKeys[DAYS_TO_STORE];
     bool terminate = false;
 
+    QElapsedTimer buildKeysTimer;
+    buildKeysTimer.start();
     for (QVector<QString>::const_iterator iter = m_keyFiles.begin(); (iter != m_keyFiles.end()) && !terminate; ++iter) {
         QString const &file = *iter;
         // TODO: Check region
@@ -253,13 +256,16 @@ void ProvideDiagnosticKeys::run()
         }
         terminate = shouldTerminate();
     }
+    qDebug() << "building keys list took " << buildKeysTimer.elapsed() << "ms";
 
     for (qint32 day = 0; (day < DAYS_TO_STORE) && !terminate; ++day) {
-        qDebug() << "Aggregating day: " << day;
+        qDebug() << "Aggregating day: " << day << "/" << DAYS_TO_STORE;
         if (diagnosisKeys[day].length() > 0) {
             quint32 const dayNumber = static_cast<quint32>(m_currentDayNumber + day);
-            qDebug() << "Calling findDtkMatches with" << diagnosisKeys[day].count() << " keys";
+            qDebug() << "Calling findDtkMatches for day" << QString::number(dayNumber) << " with" << diagnosisKeys[day].count() << " keys";
 
+            QElapsedTimer findingMatchesTimer;
+            findingMatchesTimer.start();
             QList<ContactMatch> matches;
             qint32 batchPos = 0;
             while (batchPos < diagnosisKeys[day].size() && !terminate) {
@@ -269,11 +275,16 @@ void ProvideDiagnosticKeys::run()
                 matches.append(m_d->m_contacts->findDtkMatches(dayNumber, diagnosticKeyBatch));
                 terminate = shouldTerminate();
             }
+            qDebug() << "finding matches for day" << QString::number(dayNumber) << " took " << findingMatchesTimer.elapsed() << "ms [" << diagnosisKeys[day].count() << " keys] --> " << matches.count() << "matches";
 
             terminate = shouldTerminate();
             if (!terminate && !matches.isEmpty()) {
                 qDebug() << "Calling aggregateExposureData with" << matches.count() << "matches";
+
+                QElapsedTimer aggregateTimer;
+                aggregateTimer.start();
                 m_exposureInfoList.append(aggregateExposureData(dayNumber, m_configuration, matches, day));
+                qDebug() << "aggregate for day" << QString::number(dayNumber) << " took " << aggregateTimer.elapsed() << "ms [" << matches.count() << " matches]";
             }
         }
         terminate = shouldTerminate();
