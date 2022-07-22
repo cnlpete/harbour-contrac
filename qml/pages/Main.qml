@@ -297,6 +297,18 @@ Page {
             }
 
             Button {
+                id: updateDebugButton
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: Math.max(submitKeysButton.implicitWidth, downloadButton.implicitWidth, qrButton.implicitWidth, tanButton.implicitWidth)
+                enabled: !download.downloading
+                //% "Perform update"
+                text: qsTrId("contrac-main_bu_update")
+                onClicked: {
+                    performUpdate();
+                }
+            }
+
+            Button {
                 id: downloadButton
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: Math.max(submitKeysButton.implicitWidth, downloadButton.implicitWidth, qrButton.implicitWidth, tanButton.implicitWidth)
